@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronômetro Festival de Quadrilhas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Overlay para a Arte em Tela Cheia -->
+    <div id="art-overlay"></div>
+
+    <!-- Gatilho invisível para mostrar o menu ao passar o mouse no topo -->
+    <div id="hover-trigger" onmouseover="showUI()"></div>
+
+    <!-- Painel de Controle Superior -->
+    <header id="control-layer">
+        <div class="input-row">
+            <div class="input-group">
+                <label>Produção</label>
+                <input type="number" id="cfg-producao" value="12">
+            </div>
+            <div class="input-group">
+                <label>Apresentação</label>
+                <input type="number" id="cfg-apresentacao" value="45">
+            </div>
+            <div class="input-group">
+                <label>Limpeza</label>
+                <input type="number" id="cfg-limpeza" value="10">
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn-go" onclick="initTimer('PRODUÇÃO')">Produção</button>
+            <button class="btn-go" onclick="initTimer('APRESENTAÇÃO')">Apresentação</button>
+            <button class="btn-go" onclick="initTimer('LIMPEZA')">Limpeza</button>
+            <button class="btn-fs" onclick="toggleFS()">Tela Cheia</button>
+            <button class="btn-stop" onclick="stopAll()">Resetar (ESC)</button>
+        </div>
+    </header>
+
+    <!-- Área Principal do Cronômetro -->
+    <main id="display-layer">
+        <h2 id="status-header">PRONTO</h2>
+        <div id="main-timer">00:00</div>
+        <div id="overtime-label">⚠️ TEMPO EXCEDIDO ⚠️</div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
