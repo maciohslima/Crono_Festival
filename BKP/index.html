@@ -8,19 +8,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="show-menu"> <!-- Inicia visível para configuração inicial -->
 
-    <div id="bg-image-layer"></div>
+    <!-- Zona de detecção no topo -->
+    <div id="hover-trigger" onmouseenter="showUI()"></div>
 
-    <main id="display-layer">
-        <h2 id="status-header">PRONTO</h2>
-        <div id="main-timer">00:00</div>
-        <div id="overtime-label">⚠️ TEMPO EXCEDIDO ⚠️</div>
-    </main>
-
-    <div id="hover-trigger" onmouseover="showUI()"></div>
-
-    <footer id="control-layer" onmouseleave="hideUI()">
+    <!-- O painel agora tem onmouseleave para fechar quando o mouse sair dele -->
+    <header id="control-layer" onmouseleave="hideUI()">
         <div class="input-row">
             <div class="input-group">
                 <label>Produção</label>
@@ -35,9 +29,8 @@
                 <input type="number" id="cfg-limpeza" value="10">
             </div>
             <div class="input-group">
-                <label>Imagem de Fundo</label>
-                <label for="image-uploader" class="btn-upload-label">Selecionar...</label>
-                <input type="file" id="image-uploader" accept="image/*" onchange="changeBackgroundImage(event)">
+                <label>Carregar Arte</label>
+                <input type="file" id="art-upload" accept="image/*" onchange="handleArtUpload(event)">
             </div>
         </div>
         <div class="btn-row">
@@ -47,7 +40,16 @@
             <button class="btn-fs" onclick="toggleFS()">Tela Cheia</button>
             <button class="btn-stop" onclick="stopAll()">Resetar (ESC)</button>
         </div>
-    </footer>
+    </header>
+
+    <div id="viewport-container">
+        <div id="art-overlay"></div>
+        <main id="display-layer">
+            <h2 id="status-header">PRONTO</h2>
+            <div id="main-timer">00:00</div>
+            <div id="overtime-label">⚠️ TEMPO EXCEDIDO ⚠️</div>
+        </main>
+    </div>
 
     <script src="script.js"></script>
 </body>
