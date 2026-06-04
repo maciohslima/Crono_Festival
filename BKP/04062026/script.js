@@ -9,39 +9,13 @@ const statusTxt = document.getElementById('status-header');
 const overtimeLabel = document.getElementById('overtime-label');
 const bgImageLayer = document.getElementById('bg-image-layer');
 
-// Configurações padrão iniciais
-const DEFAULTS = {
-    producao: 12,
-    apresentacao: 45,
-    saida: 5,
-    limpeza: 10
-};
-
-// Carrega as configurações guardadas no navegador assim que inicia
-function loadSettings() {
-    document.getElementById('cfg-producao').value = localStorage.getItem('cfg-producao') || DEFAULTS.producao;
-    document.getElementById('cfg-apresentacao').value = localStorage.getItem('cfg-apresentacao') || DEFAULTS.apresentacao;
-    document.getElementById('cfg-saida').value = localStorage.getItem('cfg-saida') || DEFAULTS.saida;
-    document.getElementById('cfg-limpeza').value = localStorage.getItem('cfg-limpeza') || DEFAULTS.limpeza;
-
-    const savedBg = localStorage.getItem('cfg-bg-image');
-    if (savedBg) {
-        bgImageLayer.style.backgroundImage = `url('${savedBg}')`;
-    }
-}
-
+// NOVO: Função para carregar a imagem escolhida pelo usuário
 function changeBackgroundImage(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            const base64Image = e.target.result;
-            bgImageLayer.style.backgroundImage = `url('${base64Image}')`;
-            try {
-                localStorage.setItem('cfg-bg-image', base64Image);
-            } catch (error) {
-                console.error("Imagem muito pesada para salvar no LocalStorage. Tente usar uma imagem menor que 4MB.", error);
-            }
+            bgImageLayer.style.backgroundImage = `url('${e.target.result}')`;
         }
         reader.readAsDataURL(file);
     }
@@ -53,36 +27,30 @@ function initTimer(mode) {
     currentMode = mode;
     isOvertime = false;
     
+    // Esconde o painel e oculta a imagem de fundo imediatamente
     body.classList.add('hidden-ui', 'counting');
-    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange');
+    body.classList.remove('bg-success', 'bg-warning', 'bg-danger');
     
     let configId = '';
     switch(mode) {
         case 'PRODUÇÃO': configId = 'cfg-producao'; break;
         case 'APRESENTAÇÃO': configId = 'cfg-apresentacao'; break;
-        case 'SAÍDA QUADRILHA': configId = 'cfg-saida'; break;
-        case 'LIMPEZA ARRAIAL': configId = 'cfg-limpeza'; break; // Mapeado para o novo nome do modo
+        case 'LIMPEZA': configId = 'cfg-limpeza'; break;
     }
     
     const mins = document.getElementById(configId).value;
-    
-    // Salva o valor atual do input no LocalStorage
-    localStorage.setItem(configId, mins);
-    
     totalSeconds = parseInt(mins) * 60;
     
     statusTxt.innerText = mode;
     
-    // Configuração das cores de fundo dinâmicas por modo
     if (currentMode === 'APRESENTAÇÃO') {
         body.classList.add('bg-success'); 
-    } else if (currentMode === 'SAÍDA QUADRILHA' || currentMode === 'LIMPEZA ARRAIAL') {
-        body.classList.add('bg-orange'); // Define a cor laranja para Saída e Limpeza Arraial
+        statusTxt.style.color = "var(--accent-color)"; 
+        timerTxt.style.color = "var(--accent-color)";
+    } else {
+        statusTxt.style.color = "var(--text-color)";
+        timerTxt.style.color = "var(--text-color)";
     }
-    
-    // Mantém o texto em branco para os modos padrão, verde e laranja
-    statusTxt.style.color = "var(--accent-color)"; 
-    timerTxt.style.color = "var(--accent-color)";
     
     overtimeLabel.style.visibility = 'hidden';
     updateDisplay();
@@ -91,9 +59,8 @@ function initTimer(mode) {
         if (!isOvertime) {
             totalSeconds--;
             
-            // Reta final apenas no modo Apresentação (5 minutos restantes)
             if (currentMode === 'APRESENTAÇÃO' && totalSeconds <= 300 && totalSeconds > 0) {
-                body.classList.remove('bg-success', 'bg-danger', 'bg-orange');
+                body.classList.remove('bg-success', 'bg-danger');
                 body.classList.add('bg-warning');
                 
                 statusTxt.innerText = "RETA FINAL";
@@ -104,11 +71,11 @@ function initTimer(mode) {
             if (totalSeconds <= 0) {
                 if (currentMode === 'PRODUÇÃO') {
                     clearInterval(countdown);
-                    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange');
+                    body.classList.remove('bg-success', 'bg-warning', 'bg-danger');
                     initTimer('APRESENTAÇÃO'); 
                 } else if (currentMode === 'APRESENTAÇÃO') {
                     isOvertime = true;
-                    body.classList.remove('bg-success', 'bg-warning', 'bg-orange');
+                    body.classList.remove('bg-success', 'bg-warning');
                     body.classList.add('bg-danger'); 
                     overtimeLabel.style.visibility = 'visible';
                     
@@ -146,7 +113,8 @@ function stopAll() {
     
     overtimeLabel.style.visibility = 'hidden';
     
-    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange', 'counting'); 
+    // Faz a imagem de fundo escolhida voltar a aparecer e limpa cores de estado
+    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'counting'); 
     showUI(); 
 }
 
@@ -166,9 +134,14 @@ document.addEventListener('keydown', (e) => {
     if (e.key === "Escape") stopAll();
 });
 
-function hideUI() {
-    body.classList.add('hidden-ui');
+function showUI() { 
+    body.classList.remove('hidden-ui'); 
 }
 
-// Inicializa o estado das configurações gravadas
-loadSettings();
+// NOVO: Função para recolher o painel automaticamente ao tirar o mouse
+function hideUI() {
+    // Opcional: Se você quiser que o menu NUNCA suma no estado PRONTO, 
+    // pode usar: if (currentMode !== "") body.classList.add('hidden-ui');
+    // Caso queira que ele suma sempre (mesmo no PRONTO), deixe apenas a linha abaixo:
+    body.classList.add('hidden-ui');
+}

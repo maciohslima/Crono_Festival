@@ -9,7 +9,6 @@
     --success-bg: #008000;   /* Fundo Verde para Apresentação */
     --warning-bg: #ffcc00;  /* Fundo para Reta Final (Amarelo) */
     --danger-bg: #ff4444;   /* Fundo para Tempo Esgotado (Vermelho) */
-    --orange-bg: #ff7b00;   /* NOVO: Fundo Laranja para Saída e Limpeza Arraial */
 }
 
 body {
@@ -52,7 +51,6 @@ body.counting #bg-image-layer {
 body.bg-success { background-color: var(--success-bg); }
 body.bg-warning { background-color: var(--warning-bg); }
 body.bg-danger { background-color: var(--danger-bg); }
-body.bg-orange { background-color: var(--orange-bg); } /* NOVO: Classe para aplicar o fundo laranja */
 
 #display-layer {
     display: flex;
@@ -63,11 +61,13 @@ body.bg-orange { background-color: var(--orange-bg); } /* NOVO: Classe para apli
     width: 100%;
     height: 100%;
     z-index: 2; /* Mantém o texto acima da imagem */
+    
+    /* NOVO: Começa invisível para dar lugar à imagem limpa */
     opacity: 0;
     transition: opacity 0.5s ease; /* Transição suave para o texto aparecer/sumir */
 }
 
-/* O cronômetro e textos só aparecem quando uma contagem estiver rodando */
+/* NOVO: O cronômetro e textos só aparecem quando uma contagem estiver rodando */
 body.counting #display-layer {
     opacity: 1;
 }
@@ -117,8 +117,9 @@ body.counting #display-layer {
     border-radius: 5px;
 }
 
+/* NOVO: Estilização do seletor customizado de imagem */
 #image-uploader {
-    display: none; /* Esconde o input original */
+    display: none; /* Esconde o input original feio */
 }
 
 .btn-upload-label {

@@ -6,10 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cronômetro Festival de Quadrilhas</title>
     <link rel="stylesheet" href="style.css">
-
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2457FC">
-    <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 
 <body>
@@ -28,49 +24,32 @@
         <div class="input-row">
             <div class="input-group">
                 <label>Produção</label>
-                <input type="number" id="cfg-producao">
+                <input type="number" id="cfg-producao" value="12">
             </div>
             <div class="input-group">
                 <label>Apresentação</label>
-                <input type="number" id="cfg-apresentacao">
+                <input type="number" id="cfg-apresentacao" value="45">
             </div>
             <div class="input-group">
-                <label>Saída Quadrilha</label>
-                <input type="number" id="cfg-saida">
-            </div>
-            <div class="input-group">
-                <label>Limpeza Arraial</label>
-                <input type="number" id="cfg-limpeza">
+                <label>Limpeza</label>
+                <input type="number" id="cfg-limpeza" value="10">
             </div>
             <div class="input-group">
                 <label>Imagem de Fundo</label>
                 <label for="image-uploader" class="btn-upload-label">Selecionar...</label>
                 <input type="file" id="image-uploader" accept="image/*" onchange="changeBackgroundImage(event)">
-                <small style="color: #888; font-size: 9px; margin-top: 5px; text-transform: uppercase;">Máx: 4MB
-                    (Recomendado)</small>
             </div>
         </div>
         <div class="btn-row">
             <button class="btn-go" onclick="initTimer('PRODUÇÃO')">Produção</button>
             <button class="btn-go" onclick="initTimer('APRESENTAÇÃO')">Apresentação</button>
-            <button class="btn-go" onclick="initTimer('SAÍDA QUADRILHA')">Saída Quadrilha</button>
-            <button class="btn-go" onclick="initTimer('LIMPEZA ARRAIAL')">Limpeza Arraial</button>
+            <button class="btn-go" onclick="initTimer('LIMPEZA')">Limpeza</button>
             <button class="btn-fs" onclick="toggleFS()">Tela Cheia</button>
             <button class="btn-stop" onclick="stopAll()">Resetar (ESC)</button>
         </div>
     </footer>
 
     <script src="script.js"></script>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('PWA Service Worker registrado com sucesso!', reg))
-                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
-            });
-        }
-    </script>
 </body>
 
 </html>
