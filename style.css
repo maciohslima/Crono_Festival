@@ -1,3 +1,11 @@
+/* ==========================================================================
+   PROJETO: Cronômetro Festival de Quadrilhas (PWA / Desktop)
+   DATA DE VERSÃO: 23 de Junho de 2026
+   @author maciohsdelima
+   MODIFICAÇÃO: Estilos para o botão de pausar e feedback visual de pausa ativa.
+========================================================================== 
+*/
+
 :root {
     --bg-color: #2457FC;     /* Fundo padrão (Azul) */
     --text-color: #ffffff;   /* Texto padrão (Branco) */
@@ -9,7 +17,7 @@
     --success-bg: #008000;   /* Fundo Verde para Apresentação */
     --warning-bg: #ffcc00;  /* Fundo para Reta Final (Amarelo) */
     --danger-bg: #ff4444;   /* Fundo para Tempo Esgotado (Vermelho) */
-    --orange-bg: #ff7b00;   /* NOVO: Fundo Laranja para Saída e Limpeza Arraial */
+    --orange-bg: #ff7b00;   /* Fundo Laranja para Saída e Limpeza Arraial */
 }
 
 body {
@@ -52,7 +60,7 @@ body.counting #bg-image-layer {
 body.bg-success { background-color: var(--success-bg); }
 body.bg-warning { background-color: var(--warning-bg); }
 body.bg-danger { background-color: var(--danger-bg); }
-body.bg-orange { background-color: var(--orange-bg); } /* NOVO: Classe para aplicar o fundo laranja */
+body.bg-orange { background-color: var(--orange-bg); }
 
 #display-layer {
     display: flex;
@@ -62,14 +70,19 @@ body.bg-orange { background-color: var(--orange-bg); } /* NOVO: Classe para apli
     text-align: center;
     width: 100%;
     height: 100%;
-    z-index: 2; /* Mantém o texto acima da imagem */
+    z-index: 2;
     opacity: 0;
-    transition: opacity 0.5s ease; /* Transição suave para o texto aparecer/sumir */
+    transition: opacity 0.5s ease, filter 0.3s ease;
 }
 
-/* O cronômetro e textos só aparecem quando uma contagem estiver rodando */
 body.counting #display-layer {
     opacity: 1;
+}
+
+/* Efeito visual opcional quando o cronômetro estiver pausado */
+body.paused-state #display-layer {
+    opacity: 0.5;
+    filter: blur(1px);
 }
 
 #control-layer {
@@ -118,7 +131,7 @@ body.counting #display-layer {
 }
 
 #image-uploader {
-    display: none; /* Esconde o input original */
+    display: none;
 }
 
 .btn-upload-label {
@@ -183,6 +196,17 @@ button {
 .btn-go { background: #222; color: #ffffff; border: 1px solid #ffffff; }
 .btn-stop { background: #ff4444; color: white; }
 .btn-fs { background: #444; color: white; }
+
+/* Estilo do novo botão de Pausa */
+.btn-pause {
+    background: #6c757d;
+    color: #ffffff;
+    border: 1px solid #868e96;
+    transition: background 0.2s;
+}
+.btn-pause:hover {
+    background: #5a6268;
+}
 
 #hover-trigger {
     position: fixed;

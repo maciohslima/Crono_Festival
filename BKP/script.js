@@ -1,113 +1,126 @@
-let countdown = null;
-let totalSeconds = 0;
+let countdown;
+let totalSeconds;
 let isOvertime = false;
 let currentMode = "";
-let hasArt = false;
-let wakeLock = null; // Variável para a Screen Wake Lock API
 
 const body = document.body;
 const timerTxt = document.getElementById('main-timer');
 const statusTxt = document.getElementById('status-header');
 const overtimeLabel = document.getElementById('overtime-label');
-const artOverlay = document.getElementById('art-overlay');
-const displayLayer = document.getElementById('display-layer');
+const bgImageLayer = document.getElementById('bg-image-layer');
 
-// FUNÇÃO PARA ATIVAR O BLOQUEIO DE SUSPENSÃO
-async function requestWakeLock() {
-    try {
-        if ('wakeLock' in navigator) {
-            wakeLock = await navigator.wakeLock.request('screen');
-            console.log('Bloqueio de suspensão ativado');
-        }
-    } catch (err) {
-        console.error(`${err.name}, ${err.message}`);
+// Configurações padrão iniciais
+const DEFAULTS = {
+    producao: 12,
+    apresentacao: 45,
+    saida: 5,
+    limpeza: 10
+};
+
+// Carrega as configurações guardadas no navegador assim que inicia
+function loadSettings() {
+    document.getElementById('cfg-producao').value = localStorage.getItem('cfg-producao') || DEFAULTS.producao;
+    document.getElementById('cfg-apresentacao').value = localStorage.getItem('cfg-apresentacao') || DEFAULTS.apresentacao;
+    document.getElementById('cfg-saida').value = localStorage.getItem('cfg-saida') || DEFAULTS.saida;
+    document.getElementById('cfg-limpeza').value = localStorage.getItem('cfg-limpeza') || DEFAULTS.limpeza;
+
+    const savedBg = localStorage.getItem('cfg-bg-image');
+    if (savedBg) {
+        bgImageLayer.style.backgroundImage = `url('${savedBg}')`;
     }
 }
 
-// FUNÇÃO PARA LIBERAR O BLOQUEIO
-function releaseWakeLock() {
-    if (wakeLock !== null) {
-        wakeLock.release();
-        wakeLock = null;
-        console.log('Bloqueio de suspensão liberado');
-    }
-}
-
-function showUI() { body.classList.add('show-menu'); }
-function hideUI() { 
-    if (currentMode || hasArt) {
-        body.classList.remove('show-menu'); 
-    }
-}
-
-function handleArtUpload(event) {
+function changeBackgroundImage(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            artOverlay.style.backgroundImage = `url('${e.target.result}')`;
-            hasArt = true;
-            if (!currentMode) {
-                displayLayer.style.opacity = "0";
-                artOverlay.style.display = "block";
+            const base64Image = e.target.result;
+            bgImageLayer.style.backgroundImage = `url('${base64Image}')`;
+            try {
+                localStorage.setItem('cfg-bg-image', base64Image);
+            } catch (error) {
+                console.error("Imagem muito pesada para salvar no LocalStorage. Tente usar uma imagem menor que 4MB.", error);
             }
-            hideUI();
-        };
+        }
         reader.readAsDataURL(file);
     }
 }
 
 function initTimer(mode) {
-    if (countdown) { clearInterval(countdown); countdown = null; }
+    clearInterval(countdown);
     
     currentMode = mode;
     isOvertime = false;
     
-    // ATIVA O BLOQUEIO DE SUSPENSÃO AO INICIAR
-    requestWakeLock();
+    body.classList.add('hidden-ui', 'counting');
+    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange');
     
-    displayLayer.style.opacity = "1";
-    artOverlay.style.display = 'none';
-    hideUI();
+    let configId = '';
+    switch(mode) {
+        case 'PRODUÇÃO': configId = 'cfg-producao'; break;
+        case 'APRESENTAÇÃO': configId = 'cfg-apresentacao'; break;
+        case 'SAÍDA QUADRILHA': configId = 'cfg-saida'; break;
+        case 'LIMPEZA ARRAIAL': configId = 'cfg-limpeza'; break; // Mapeado para o novo nome do modo
+    }
     
-    body.style.backgroundColor = "var(--bg-color)";
-    timerTxt.style.color = "var(--text-color)";
-    overtimeLabel.style.visibility = 'hidden';
+    const mins = document.getElementById(configId).value;
     
-    let configId = (mode === 'PRODUÇÃO') ? 'cfg-producao' : (mode === 'APRESENTAÇÃO' ? 'cfg-apresentacao' : 'cfg-limpeza');
-    totalSeconds = parseInt(document.getElementById(configId).value) * 60;
+    // Salva o valor atual do input no LocalStorage
+    localStorage.setItem(configId, mins);
+    
+    totalSeconds = parseInt(mins) * 60;
     
     statusTxt.innerText = mode;
-    statusTxt.style.color = "var(--text-color)";
+    
+    // Configuração das cores de fundo dinâmicas por modo
+    if (currentMode === 'APRESENTAÇÃO') {
+        body.classList.add('bg-success'); 
+    } else if (currentMode === 'SAÍDA QUADRILHA' || currentMode === 'LIMPEZA ARRAIAL') {
+        body.classList.add('bg-orange'); // Define a cor laranja para Saída e Limpeza Arraial
+    }
+    
+    // Mantém o texto em branco para os modos padrão, verde e laranja
+    statusTxt.style.color = "var(--accent-color)"; 
+    timerTxt.style.color = "var(--accent-color)";
+    
+    overtimeLabel.style.visibility = 'hidden';
     updateDisplay();
 
     countdown = setInterval(() => {
         if (!isOvertime) {
             totalSeconds--;
             
+            // Reta final apenas no modo Apresentação (5 minutos restantes)
             if (currentMode === 'APRESENTAÇÃO' && totalSeconds <= 300 && totalSeconds > 0) {
-                body.style.backgroundColor = "var(--warning-bg)";
-                timerTxt.style.color = 'var(--warning-color)';
+                body.classList.remove('bg-success', 'bg-danger', 'bg-orange');
+                body.classList.add('bg-warning');
+                
                 statusTxt.innerText = "RETA FINAL";
-                statusTxt.style.color = "var(--warning-color)";
+                statusTxt.style.color = 'var(--warning-color)';
+                timerTxt.style.color = 'var(--warning-color)';
             }
 
             if (totalSeconds <= 0) {
                 if (currentMode === 'PRODUÇÃO') {
-                    initTimer('APRESENTAÇÃO');
+                    clearInterval(countdown);
+                    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange');
+                    initTimer('APRESENTAÇÃO'); 
                 } else if (currentMode === 'APRESENTAÇÃO') {
                     isOvertime = true;
-                    body.style.backgroundColor = "var(--danger-bg)";
+                    body.classList.remove('bg-success', 'bg-warning', 'bg-orange');
+                    body.classList.add('bg-danger'); 
                     overtimeLabel.style.visibility = 'visible';
-                    timerTxt.style.color = 'var(--danger-color)';
+                    
                     statusTxt.innerText = "TEMPO ESGOTADO";
-                    statusTxt.style.color = "var(--danger-color)";
+                    statusTxt.style.color = 'var(--danger-color)';
+                    timerTxt.style.color = 'var(--danger-color)';
                 } else {
-                    stopAll();
+                    stopAll(); 
                 }
             }
         } else {
-            totalSeconds++;
+            totalSeconds++; 
         }
         updateDisplay();
     }, 1000);
@@ -121,40 +134,41 @@ function updateDisplay() {
 }
 
 function stopAll() {
-    if (countdown) { clearInterval(countdown); countdown = null; }
-    
-    // LIBERA O BLOQUEIO DE SUSPENSÃO AO PARAR TUDO
-    releaseWakeLock();
-    
+    clearInterval(countdown);
     isOvertime = false;
     currentMode = "";
     totalSeconds = 0;
-    
-    if (hasArt) {
-        displayLayer.style.opacity = "0";
-        artOverlay.style.display = 'block';
-    } else {
-        displayLayer.style.opacity = "1";
-    }
-    
-    body.style.backgroundColor = "var(--bg-color)";
     timerTxt.innerText = "00:00";
+    
+    timerTxt.style.color = "#ffffff";
     statusTxt.innerText = "PRONTO";
-    statusTxt.style.color = "var(--text-color)";
+    statusTxt.style.color = "#ffffff";
+    
     overtimeLabel.style.visibility = 'hidden';
-    showUI();
+    
+    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange', 'counting'); 
+    showUI(); 
 }
 
-function toggleFS() { 
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-    else document.exitFullscreen();
+function showUI() { 
+    body.classList.remove('hidden-ui'); 
 }
 
-// Reativa o bloqueio se o usuário alternar abas e voltar para o cronômetro
-document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible') {
-        requestWakeLock();
+function toggleFS() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        document.exitFullscreen();
     }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape") stopAll();
 });
 
-document.addEventListener('keydown', (e) => { if (e.key === "Escape") stopAll(); });
+function hideUI() {
+    body.classList.add('hidden-ui');
+}
+
+// Inicializa o estado das configurações gravadas
+loadSettings();

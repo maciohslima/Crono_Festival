@@ -1,6 +1,15 @@
+/* ==========================================================================
+   PROJETO: Cronômetro Festival de Quadrilhas (PWA / Desktop)
+   DATA DE VERSÃO: 23 de Junho de 2026
+   @author maciohsdelima
+   MODIFICAÇÃO: Implementação da trava isPaused e escuta do caractere "Espaço".
+========================================================================== 
+*/
+
 let countdown;
 let totalSeconds;
 let isOvertime = false;
+let isPaused = false; // Controla se o fluxo temporal está retido
 let currentMode = "";
 
 const body = document.body;
@@ -9,7 +18,6 @@ const statusTxt = document.getElementById('status-header');
 const overtimeLabel = document.getElementById('overtime-label');
 const bgImageLayer = document.getElementById('bg-image-layer');
 
-// Configurações padrão iniciais
 const DEFAULTS = {
     producao: 12,
     apresentacao: 45,
@@ -17,7 +25,6 @@ const DEFAULTS = {
     limpeza: 10
 };
 
-// Carrega as configurações guardadas no navegador assim que inicia
 function loadSettings() {
     document.getElementById('cfg-producao').value = localStorage.getItem('cfg-producao') || DEFAULTS.producao;
     document.getElementById('cfg-apresentacao').value = localStorage.getItem('cfg-apresentacao') || DEFAULTS.apresentacao;
@@ -47,40 +54,67 @@ function changeBackgroundImage(event) {
     }
 }
 
+// Inverte o estado de pausa e atualiza as strings de status na tela
+function togglePause() {
+    // Só permite pausar se houver um timer ativamente instanciado e rodando
+    if (!countdown || currentMode === "") return;
+
+    isPaused = !isPaused;
+
+    const btnPause = document.querySelector('.btn-pause');
+
+    if (isPaused) {
+        body.classList.add('paused-state');
+        statusTxt.innerText = "PAUSADO";
+        if (btnPause) btnPause.innerText = "Retomar (Espaço)";
+    } else {
+        body.classList.remove('paused-state');
+        if (btnPause) btnPause.innerText = "Pausar (Espaço)";
+        
+        // Reconstrói a string correta baseado no estágio atual do cronômetro
+        if (isOvertime) {
+            statusTxt.innerText = "TEMPO ESGOTADO";
+        } else if (currentMode === 'APRESENTAÇÃO' && totalSeconds <= 300) {
+            statusTxt.innerText = "RETA FINAL";
+        } else {
+            statusTxt.innerText = currentMode;
+        }
+    }
+}
+
 function initTimer(mode) {
     clearInterval(countdown);
     
     currentMode = mode;
     isOvertime = false;
+    isPaused = false; // Reseta o estado de pausa ao iniciar um novo ciclo
+    
+    const btnPause = document.querySelector('.btn-pause');
+    if (btnPause) btnPause.innerText = "Pausar (Espaço)";
     
     body.classList.add('hidden-ui', 'counting');
-    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange');
+    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange', 'paused-state');
     
     let configId = '';
     switch(mode) {
         case 'PRODUÇÃO': configId = 'cfg-producao'; break;
         case 'APRESENTAÇÃO': configId = 'cfg-apresentacao'; break;
         case 'SAÍDA QUADRILHA': configId = 'cfg-saida'; break;
-        case 'LIMPEZA ARRAIAL': configId = 'cfg-limpeza'; break; // Mapeado para o novo nome do modo
+        case 'LIMPEZA ARRAIAL': configId = 'cfg-limpeza'; break;
     }
     
     const mins = document.getElementById(configId).value;
-    
-    // Salva o valor atual do input no LocalStorage
     localStorage.setItem(configId, mins);
     
     totalSeconds = parseInt(mins) * 60;
-    
     statusTxt.innerText = mode;
     
-    // Configuração das cores de fundo dinâmicas por modo
     if (currentMode === 'APRESENTAÇÃO') {
         body.classList.add('bg-success'); 
     } else if (currentMode === 'SAÍDA QUADRILHA' || currentMode === 'LIMPEZA ARRAIAL') {
-        body.classList.add('bg-orange'); // Define a cor laranja para Saída e Limpeza Arraial
+        body.classList.add('bg-orange'); 
     }
     
-    // Mantém o texto em branco para os modos padrão, verde e laranja
     statusTxt.style.color = "var(--accent-color)"; 
     timerTxt.style.color = "var(--accent-color)";
     
@@ -88,10 +122,12 @@ function initTimer(mode) {
     updateDisplay();
 
     countdown = setInterval(() => {
+        // Se a mesa pausou o cronômetro, ignora o bloco lógico e mantém os valores intactos
+        if (isPaused) return;
+
         if (!isOvertime) {
             totalSeconds--;
             
-            // Reta final apenas no modo Apresentação (5 minutos restantes)
             if (currentMode === 'APRESENTAÇÃO' && totalSeconds <= 300 && totalSeconds > 0) {
                 body.classList.remove('bg-success', 'bg-danger', 'bg-orange');
                 body.classList.add('bg-warning');
@@ -136,6 +172,7 @@ function updateDisplay() {
 function stopAll() {
     clearInterval(countdown);
     isOvertime = false;
+    isPaused = false;
     currentMode = "";
     totalSeconds = 0;
     timerTxt.innerText = "00:00";
@@ -146,7 +183,10 @@ function stopAll() {
     
     overtimeLabel.style.visibility = 'hidden';
     
-    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange', 'counting'); 
+    const btnPause = document.querySelector('.btn-pause');
+    if (btnPause) btnPause.innerText = "Pausar (Espaço)";
+    
+    body.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-orange', 'counting', 'paused-state'); 
     showUI(); 
 }
 
@@ -162,13 +202,22 @@ function toggleFS() {
     }
 }
 
+// Escuta ativa de atalhos globais do teclado
 document.addEventListener('keydown', (e) => {
-    if (e.key === "Escape") stopAll();
+    if (e.key === "Escape") {
+        stopAll();
+    }
+    
+    // Captura o clique da tecla Espaço para gerenciamento rápido
+    if (e.key === " " || e.key === "Spacebar") {
+        // Evita que a página dê rolagem (scroll) ao apertar a barra de espaço
+        e.preventDefault();
+        togglePause();
+    }
 });
 
 function hideUI() {
     body.classList.add('hidden-ui');
 }
 
-// Inicializa o estado das configurações gravadas
 loadSettings();
