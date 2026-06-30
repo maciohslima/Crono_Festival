@@ -1,34 +1,25 @@
-/* ===================================================================================
-Project:        Cronômetro Festival de Quadrilhas
-Description:    Aplicação web (PWA) desenvolvida para gerenciar e cronometrar os 
-                tempos das etapas de um Festival de Quadrilhas (Produção, 
-                Apresentação, Saída e Limpeza). Possui suporte a alertas de tempo 
-                excedido, modo tela cheia e customização de imagem de fundo.
-@author:        Mácio Helton Silveira de Lima
-@modified:      30/06/2026
-@version:       1.1.0
-=================================================================================== */
+/* ==========================================================================
+   PROJETO: Cronômetro Festival de Quadrilhas (PWA / Desktop)
+   DATA DE VERSÃO: 23 de Junho de 2026
+   @author maciohsdelima
+   MODIFICAÇÃO: Estilos para o botão de pausar e feedback visual de pausa ativa.
+========================================================================== 
+*/
 
-/* ==========================================
-   VARIÁVEIS GLOBAIS (DESIGN SYSTEM)
-   ========================================== */
 :root {
-    --bg-color: #2457FC;       /* Cor de fundo padrão (Azul) */
-    --text-color: #ffffff;     /* Cor padrão do texto (Branco) */
-    --accent-color: #ffffff;   /* Cor de destaque para elementos importantes */
-    --warning-color: #000000;  /* Cor do texto durante a Reta Final (Preto para contraste) */
-    --danger-color: #000000;   /* Cor do texto em Tempo Esgotado */
-
-    /* Paleta de fundos dinâmicos para os estados do cronômetro */
-    --success-bg: #008000;     /* Fundo Verde: Apresentação normal */
-    --warning-bg: #ffcc00;     /* Fundo Amarelo: Reta Final (últimos 5 minutos) */
-    --danger-bg: #ff4444;      /* Fundo Vermelho: Tempo Esgotado / Estouro */
-    --orange-bg: #ff7b00;      /* Fundo Laranja: Etapas de Saída e Limpeza */
+    --bg-color: #2457FC;     /* Fundo padrão (Azul) */
+    --text-color: #ffffff;   /* Texto padrão (Branco) */
+    --accent-color: #ffffff; 
+    --warning-color: #000;    /* Texto para Reta Final (Preto) */
+    --danger-color: #000;  
+    
+    /* Cores de fundo estáticas para os alertas */
+    --success-bg: #008000;   /* Fundo Verde para Apresentação */
+    --warning-bg: #ffcc00;  /* Fundo para Reta Final (Amarelo) */
+    --danger-bg: #ff4444;   /* Fundo para Tempo Esgotado (Vermelho) */
+    --orange-bg: #ff7b00;   /* Fundo Laranja para Saída e Limpeza Arraial */
 }
 
-/* ==========================================
-   ESTRUTURA BASE DA PÁGINA (BODY)
-   ========================================== */
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -41,13 +32,10 @@ body {
     height: 100vh;
     overflow: hidden;
     position: relative;
-    /* Transição suave de meio segundo ao mudar as cores de fundo */
-    transition: background-color 0.5s ease; 
+    transition: background-color 0.5s ease;
 }
 
-/* ==========================================
-   CAMADA DO PAPEL DE PAREDE (BACKGROUND IMAGE)
-   ========================================== */
+/* Camada da Imagem de Fundo */
 #bg-image-layer {
     position: absolute;
     top: 0;
@@ -62,23 +50,18 @@ body {
     transition: opacity 0.5s ease;
 }
 
-/* Oculta o papel de parede quando qualquer contagem regressiva inicia */
+/* Esconde a imagem de fundo quando qualquer contagem inicia */
 body.counting #bg-image-layer {
     opacity: 0;
     pointer-events: none;
 }
 
-/* ==========================================
-   ESTADOS DINÂMICOS (APLICADOS VIA JAVASCRIPT)
-   ========================================== */
+/* Classes de estado aplicadas pelo JS */
 body.bg-success { background-color: var(--success-bg); }
 body.bg-warning { background-color: var(--warning-bg); }
-body.bg-danger  { background-color: var(--danger-bg); }
-body.bg-orange  { background-color: var(--orange-bg); }
+body.bg-danger { background-color: var(--danger-bg); }
+body.bg-orange { background-color: var(--orange-bg); }
 
-/* ==========================================
-   PAINEL DE EXIBIÇÃO DO CRONÔMETRO (DISPLAY)
-   ========================================== */
 #display-layer {
     display: flex;
     flex-direction: column;
@@ -92,52 +75,16 @@ body.bg-orange  { background-color: var(--orange-bg); }
     transition: opacity 0.5s ease, filter 0.3s ease;
 }
 
-/* Revela o contador quando o app entra em modo de contagem */
 body.counting #display-layer {
     opacity: 1;
 }
 
-/* Aplica um leve desfoque e reduz a opacidade quando o cronômetro é pausado */
+/* Efeito visual opcional quando o cronômetro estiver pausado */
 body.paused-state #display-layer {
     opacity: 0.5;
     filter: blur(1px);
 }
 
-/* Elementos textuais internos do painel */
-#status-header {
-    font-size: 2.5rem;
-    text-transform: uppercase;
-    letter-spacing: 10px;
-    color: var(--text-color);
-    margin: 0;
-    transition: color 0.3s ease;
-}
-
-#main-timer {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 25vw; /* Tamanho responsivo proporcional à largura da tela */
-    font-weight: bold;
-    margin: 0;
-    line-height: 0.9;
-    color: var(--text-color);
-    transition: color 0.3s ease;
-}
-
-#overtime-label {
-    display: inline-block;
-    background: #ff4444;
-    color: white;
-    padding: 10px 50px;
-    font-size: 2rem;
-    font-weight: bold;
-    border-radius: 50px;
-    margin-top: 20px;
-    visibility: hidden; /* Controlado dinamicamente pelo JS */
-}
-
-/* ==========================================
-   PAINEL DE CONTROLE ONDULANTE (RODAPÉ)
-   ========================================== */
 #control-layer {
     position: fixed;
     bottom: 0;
@@ -149,22 +96,15 @@ body.paused-state #display-layer {
     align-items: center;
     gap: 15px;
     z-index: 100;
-    /* Transição suave usando curvas cúbicas para o efeito de recolhimento */
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border-top: 2px solid #222;
 }
 
-/* Empurra o rodapé para fora da viewport quando a interface deve sumir */
 .hidden-ui #control-layer {
     transform: translateY(100%);
 }
 
-/* Alinhamento dos campos de entrada numéricos */
-.input-row {
-    display: flex;
-    gap: 25px;
-    align-items: flex-end;
-}
+.input-row { display: flex; gap: 25px; align-items: flex-end; }
 
 .input-group {
     display: flex;
@@ -190,51 +130,6 @@ body.paused-state #display-layer {
     border-radius: 5px;
 }
 
-/* ==========================================
-   BOTÕES E COMPONENTES DE INTERAÇÃO
-   ========================================== */
-.btn-row {
-    display: flex;
-    gap: 12px;
-}
-
-button {
-    padding: 12px 24px;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 6px;
-    border: none;
-    text-transform: uppercase;
-}
-
-.btn-go {
-    background: #222;
-    color: #ffffff;
-    border: 1px solid #ffffff;
-}
-
-.btn-stop {
-    background: #ff4444;
-    color: white;
-}
-
-.btn-fs {
-    background: #444;
-    color: white;
-}
-
-.btn-pause {
-    background: #6c757d;
-    color: #ffffff;
-    border: 1px solid #868e96;
-    transition: background 0.2s;
-}
-
-.btn-pause:hover {
-    background: #5a6268;
-}
-
-/* Customização estética do seletor de arquivos oculto */
 #image-uploader {
     display: none;
 }
@@ -256,13 +151,67 @@ button {
     background: #555;
 }
 
-/* ==========================================
-   GATILHO DE ATIVAÇÃO DO MOUSE (HOVER ZONE)
-   ========================================== */
+#status-header {
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 10px;
+    color: var(--text-color);
+    margin: 0;
+    transition: color 0.3s ease;
+}
+
+#main-timer {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 25vw;
+    font-weight: bold;
+    margin: 0;
+    line-height: 0.9;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+}
+
+#overtime-label {
+    display: inline-block;
+    background: #ff4444;
+    color: white;
+    padding: 10px 50px;
+    font-size: 2rem;
+    font-weight: bold;
+    border-radius: 50px;
+    margin-top: 20px;
+    visibility: hidden;
+}
+
+.btn-row { display: flex; gap: 12px; }
+
+button {
+    padding: 12px 24px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 6px;
+    border: none;
+    text-transform: uppercase;
+}
+
+.btn-go { background: #222; color: #ffffff; border: 1px solid #ffffff; }
+.btn-stop { background: #ff4444; color: white; }
+.btn-fs { background: #444; color: white; }
+
+/* Estilo do novo botão de Pausa */
+.btn-pause {
+    background: #6c757d;
+    color: #ffffff;
+    border: 1px solid #868e96;
+    transition: background 0.2s;
+}
+.btn-pause:hover {
+    background: #5a6268;
+}
+
 #hover-trigger {
     position: fixed;
     bottom: 0;
     width: 100%;
-    height: 30px; /* Margem invisível de ativação no rodapé */
+    height: 30px;
     z-index: 101;
 }
