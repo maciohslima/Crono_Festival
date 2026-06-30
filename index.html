@@ -1,30 +1,75 @@
+<!--
+===================================================================================
+Project:        Cronômetro Festival de Quadrilhas
+Description:    Aplicação web (PWA) desenvolvida para gerenciar e cronometrar os 
+                tempos das etapas de um Festival de Quadrilhas (Produção, 
+                Apresentação, Saída e Limpeza). Possui suporte a alertas de tempo 
+                excedido, modo tela cheia e customização de imagem de fundo.
+@author:        Mácio Helton Silveira de Lima
+@modified:      30/06/2026
+@version:       1.1.0
+===================================================================================
+-->
+
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
+    <!-- ==========================================
+         METADADOS, ESTILOS E CONFIGURAÇÃO PWA
+         ========================================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cronômetro Festival de Quadrilhas</title>
+    
+    <!-- Vínculo com o arquivo de estilização visual -->
     <link rel="stylesheet" href="style.css">
-
+    
+    <!-- Configurações para funcionamento como PWA (Instalável no celular/PC) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2457FC">
     <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
-
 <body>
 
+    <!-- ==========================================
+         CAMADA DE BACKGROUND (PLANO DE FUNDO)
+         Funcionalidade: Recebe a imagem customizada
+         dinamicamente via JavaScript/CSS.
+         ========================================== -->
     <div id="bg-image-layer"></div>
 
+    <!-- ==========================================
+         CAMADA DE EXIBIÇÃO (DISPLAY PRINCIPAL)
+         Funcionalidade: Mostra o status atual, o
+         temporizador gigante e os alertas visuais.
+         ========================================== -->
     <main id="display-layer">
+        <!-- Exibe a etapa atual (ex: PRODUÇÃO, APRESENTAÇÃO) -->
         <h2 id="status-header">PRONTO</h2>
+        
+        <!-- O contador numérico principal (MM:SS) -->
         <div id="main-timer">00:00</div>
+        
+        <!-- Alerta oculto por padrão, ativado quando o tempo estoura -->
         <div id="overtime-label">⚠️ TEMPO EXCEDIDO ⚠️</div>
     </main>
 
+    <!-- ==========================================
+         ZONA DE GATILHO (HOVER TRIGGER)
+         Funcionalidade: Área invisível no topo/rodapé
+         que detecta o mouse para revelar o painel de 
+         controle oculto.
+         ========================================== -->
     <div id="hover-trigger" onmouseover="showUI()"></div>
 
+    <!-- ==========================================
+         PAINEL DE CONTROLE (RODAPÉ CONFIGURÁVEL)
+         Funcionalidade: Contém as configurações de tempo,
+         botões de ação e gerenciamento de arquivos.
+         ========================================== -->
     <footer id="control-layer" onmouseleave="hideUI()">
+        
+        <!-- Bloco 1: Inputs de Tempo para cada Etapa -->
         <div class="input-row">
             <div class="input-group">
                 <label>Produção</label>
@@ -35,43 +80,45 @@
                 <input type="number" id="cfg-apresentacao">
             </div>
             <div class="input-group">
-                <label>Saída Quadrilha</label>
+                <label>Saída</label>
                 <input type="number" id="cfg-saida">
             </div>
             <div class="input-group">
-                <label>Limpeza Arraial</label>
+                <label>Limpeza</label>
                 <input type="number" id="cfg-limpeza">
             </div>
-            <div class="input-group">
-                <label>Imagem de Fundo</label>
-                <label for="image-uploader" class="btn-upload-label">Selecionar...</label>
-                <input type="file" id="image-uploader" accept="image/*" onchange="changeBackgroundImage(event)">
-                <small style="color: #888; font-size: 9px; margin-top: 5px; text-transform: uppercase;">Máx: 4MB
-                    (Recomendado)</small>
-            </div>
         </div>
-        <div class="btn-row">
-            <button class="btn-go" onclick="initTimer('PRODUÇÃO')">Produção</button>
-            <button class="btn-go" onclick="initTimer('APRESENTAÇÃO')">Apresentação</button>
-            <button class="btn-go" onclick="initTimer('SAÍDA QUADRILHA')">Saída Quadrilha</button>
-            <button class="btn-go" onclick="initTimer('LIMPEZA ARRAIAL')">Limpeza Arraial</button>
-            <button class="btn-pause" onclick="togglePause()">Pausar (Espaço)</button>
-            <button class="btn-fs" onclick="toggleFS()">Tela Cheia</button>
-            <button class="btn-stop" onclick="stopAll()">Resetar (ESC)</button>
+
+        <!-- Bloco 2: Botões de Controle do Cronômetro -->
+        <div class="button-row">
+            <button id="btn-start" onclick="startTimer()">Iniciar</button>
+            <button id="btn-pause" onclick="pauseTimer()" disabled>Pausar</button>
+            <button id="btn-reset" onclick="resetTimer()">Reiniciar</button>
+            <button id="btn-fullscreen" onclick="toggleFullscreen()">Tela Cheia</button>
+        </div>
+
+        <!-- Bloco 3: Upload de Imagem de Fundo Customizada -->
+        <div class="config-row">
+            <label for="bg-upload" class="custom-file-upload">
+                Selecionar Imagem de Fundo
+            </label>
+            <input type="file" id="bg-upload" accept="image/*" onchange="handleBackgroundUpload(event)">
         </div>
     </footer>
 
+    <!-- ==========================================
+         VÍNCULO DE SCRIPTS (LÓGICA DO SISTEMA)
+         Funcionalidade: Carrega as funções do cronômetro
+         e registra o Service Worker para uso offline.
+         ========================================== -->
     <script src="script.js"></script>
-
     <script>
+        // Inicializa o Service Worker do PWA se o navegador suportar
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('PWA Service Worker registrado com sucesso!', reg))
-                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
-            });
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registrado com sucesso.'))
+                .catch(err => console.error('Erro ao registrar Service Worker:', err));
         }
     </script>
 </body>
-
 </html>
